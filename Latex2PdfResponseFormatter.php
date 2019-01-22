@@ -91,7 +91,7 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 		}else{
 			unlink($logfile_path);
 			unlink($auxfile_path);
-			if($pdffile_path)){
+			if($pdffile_path){
 				$pdf = file_get_contents($pdffile_path);
 				unlink($pdffile_path);
 				return $pdf;
