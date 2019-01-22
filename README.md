@@ -3,7 +3,7 @@ Yii2-Latex
 
 Latex2PDF formatter for Yii2 .
 
-This extension "format" HTML responses to PDF files (by default Yii2 includes HTML, JSON and XML formatters). Great for reports in PDF format using HTML views/layouts.
+This extension "format" Latex responses to PDF files (by default Yii2 includes HTML, JSON and XML formatters). Great for reports in PDF format using Latex views/layouts.
 
 ##Installation
 
@@ -35,13 +35,17 @@ return [
 			'formatters' => [
 				'pdf' => [
 					'class' => 'pcrt\latex\Latex2PdfResponseFormatter',
-				],
+					'latexbin' => '/usr/local/bin/latex',
+					'buildpath' => '/folder/you/prefer'
+ 				],
 			]
 		],
 		...
 	],
 ];
 ```
+For default the buildpath variable is set on your @webroot folder . 
+
 
 In the controller:
 
