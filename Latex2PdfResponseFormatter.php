@@ -24,7 +24,7 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 {
 
 	public $latexbin = "/usr/local/bin/pdflatex";
-	public $outputdir = \Yii::getAlias('@webroot');
+	public $outputdir = "";
 
 	public $options = [];
 
@@ -51,12 +51,24 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 	 */
 	protected function formatPdf($response)
 	{
-		\Yii::trace($response->data);
-		$temp = tmpfile();
-		fwrite($temp, $response->data);
-		fclose($temp);
-		$outputdir = "";
-		shell_exec($latexbin . " " . $temp . "-alt-on-error -output-directory " . $output);
+		$tmpfile_name = uniqid();
+		$tmpfile_path = getcwd()."/".$tmpfile_name;
 
+		$outputdir = getcwd();
+		$fp = fopen($tmpfile_path, 'w+');
+		fwrite($fp, $response->data);
+		fclose($fp);
+		$cmd = $this->latexbin . " " . $tmpfile_path . " -alt-on-error -output-directory " . $outputdir;
+
+		// Refator to process
+		shell_exec($cmd);
+		\Yii::trace("EXEC: ".$cmd);
+		unlink(getcwd()."/".$tmpfile_name.".log");
+		unlink(getcwd()."/".$tmpfile_name.".aux");
+		if(file_exists(getcwd()."/".$tmpfile_name.".pdf")){
+			$pdf = file_get_contents(getcwd()."/".$tmpfile_name.".pdf");
+			unlink(getcwd()."/".$tmpfile_name.".pdf");
+			return $pdf;
+		}
 	}
 }
