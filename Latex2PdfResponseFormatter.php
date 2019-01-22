@@ -11,6 +11,8 @@ use Yii;
 use yii\base\Component;
 use yii\web\Response;
 use yii\web\ResponseFormatterInterface;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
  * Latex2PdfResponseFormatter formats the given Latex into a PDF response content.
@@ -24,7 +26,9 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 {
 
 	public $latexbin = "/usr/local/bin/pdflatex";
-	public $outputdir = "";
+	public $build_path = getcwd()."/";
+	public $timeout = 120;
+	public $idletimeout = 60;
 
 	public $options = [];
 
@@ -51,24 +55,47 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 	 */
 	protected function formatPdf($response)
 	{
-		$tmpfile_name = uniqid();
-		$tmpfile_path = getcwd()."/".$tmpfile_name;
 
-		$outputdir = getcwd();
+		// #TODO: Implement BeforeRender Functionality
+
+		$tmpfile_name = uniqid();
+
+		$tmpfile_path = $this->build_path.$tmpfile_name;
+		$logfile_path = $this->build_path.$tmpfile_name.".log";
+		$auxfile_path = $this->build_path.$tmpfile_name.".aux";
+		$pdffile_path = $this->build_path.$tmpfile_name.".pdf";
+
+		// Write temp file
 		$fp = fopen($tmpfile_path, 'w+');
 		fwrite($fp, $response->data);
 		fclose($fp);
-		$cmd = $this->latexbin . " " . $tmpfile_path . " -alt-on-error -output-directory " . $outputdir;
 
-		// Refator to process
-		shell_exec($cmd);
-		\Yii::trace("EXEC: ".$cmd);
-		unlink(getcwd()."/".$tmpfile_name.".log");
-		unlink(getcwd()."/".$tmpfile_name.".aux");
-		if(file_exists(getcwd()."/".$tmpfile_name.".pdf")){
-			$pdf = file_get_contents(getcwd()."/".$tmpfile_name.".pdf");
-			unlink(getcwd()."/".$tmpfile_name.".pdf");
-			return $pdf;
+		// Start Process
+		$process = new Process(
+			[
+				$this->latexbin,
+				'-interaction=nonstopmode',
+				$tmpfile_path,
+				'-output-directory='.$build_path
+			]
+		);
+
+		$process->setTimeout($this->timeout);
+		$process->setIdleTimeout($this->idletimeout);
+		$process->run();
+
+		if (!$process->isSuccessful()) {
+			unlink($logfile_path);
+			unlink($auxfile_path);
+    	throw new ProcessFailedException($process);
+		}else{
+			unlink($logfile_path);
+			unlink($auxfile_path);
+			if($pdffile_path)){
+				$pdf = file_get_contents($pdffile_path);
+				unlink($pdffile_path);
+				return $pdf;
+			}
 		}
 	}
 }
