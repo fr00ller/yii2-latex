@@ -26,7 +26,7 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 {
 
 	public $latexbin = "/usr/local/bin/pdflatex";
-	public $build_path = getcwd()."/";
+	public $build_path = "";
 	public $timeout = 120;
 	public $idletimeout = 60;
 
@@ -59,6 +59,9 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 		// #TODO: Implement BeforeRender Functionality
 
 		$tmpfile_name = uniqid();
+		if($this->build_path == ""){
+			$this->build_path = getcwd()."/";
+		}
 
 		$tmpfile_path = $this->build_path.$tmpfile_name;
 		$logfile_path = $this->build_path.$tmpfile_name.".log";
@@ -76,7 +79,7 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 				$this->latexbin,
 				'-interaction=nonstopmode',
 				$tmpfile_path,
-				'-output-directory='.$build_path
+				'-output-directory=$build_path'
 			]
 		);
 
@@ -87,11 +90,13 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 		if (!$process->isSuccessful()) {
 			unlink($logfile_path);
 			unlink($auxfile_path);
+			unlink($tmpfile_path);
     	throw new ProcessFailedException($process);
 		}else{
 			unlink($logfile_path);
 			unlink($auxfile_path);
-			if($pdffile_path){
+			unlink($tmpfile_path);
+			if(file_exists($pdffile_path)){
 				$pdf = file_get_contents($pdffile_path);
 				unlink($pdffile_path);
 				return $pdf;
