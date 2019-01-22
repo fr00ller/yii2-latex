@@ -23,6 +23,9 @@ use yii\web\ResponseFormatterInterface;
 class Latex2PdfResponseFormatter extends Component implements ResponseFormatterInterface
 {
 
+	public $latexbin = "/usr/local/bin/pdflatex";
+	public $outputdir = \Yii::getAlias('@webroot');
+
 	public $options = [];
 
 	/**
@@ -49,7 +52,11 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 	protected function formatPdf($response)
 	{
 		\Yii::trace($response->data);
-
+		$temp = tmpfile();
+		fwrite($temp, $response->data);
+		fclose($temp);
+		$outputdir = "";
+		shell_exec($latexbin . " " . $temp . "-alt-on-error -output-directory " . $output);
 
 	}
 }
