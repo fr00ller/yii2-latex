@@ -2,7 +2,7 @@
 /**
  *
  * @author Marco Petrini <marco@bhima.eu>
- * @created 15/05/14 12:35 PM
+ * @created 20/02/19 12:35 PM
  */
 
 namespace pcrt\latex;
@@ -60,7 +60,7 @@ class Latex2PdfResponseFormatter extends Component implements ResponseFormatterI
 
 		$tmpfile_name = uniqid();
 		if($this->build_path == ""){
-			$this->build_path = getcwd()."/";
+			$this->build_path = getcwd().DIRECTORY_SEPARATOR;
 		}
 
 		$tmpfile_path = $this->build_path.$tmpfile_name;
